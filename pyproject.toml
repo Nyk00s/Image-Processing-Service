@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "image-processing-service"
+version = "0.1.0"
+description = "A backend system for an image processing service. The service allows users to upload images, perform various transformations, and retrieve images in different formats. The system has user authentication, image upload, transformation operations, and efficient retrieval mechanisms."                      
+requires-python = ">=3.14" 
+dependencies = [
+    "fastapi>=0.140.0",
+    "uvicorn[standard]>=0.51.0",
+    "sqlalchemy>=2.0.51",
+    "alembic>=1.18.5",
+    "psycopg[binary]>=3.3.4",
+    "pydantic-settings>=2.14.2",
+    "pwdlib[bcrypt]>=0.3.0",
+    "email-validator>=2.3.0",
+    "python-dotenv>=1.2.2"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "httpx",
+]
+
+[tool.setuptools]
+packages = ["app"]

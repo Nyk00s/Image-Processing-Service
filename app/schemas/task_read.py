@@ -1,5 +1,5 @@
 from datetime import datetime
-from models import TaskStatus
+from app.models import TaskStatus
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, UUID4, ConfigDict
 

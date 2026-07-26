@@ -1,11 +1,12 @@
-from passlib.context import CryptContext
+from pwdlib import PasswordHash
+from pwdlib.hashers.bcrypt import BcryptHasher
 
-context = CryptContext(schemes=["bcrypt"])
+password_hash = PasswordHash((BcryptHasher(),))
 
 
 def hash_password(plain: str) -> str:
-    return context.hash(plain.encode())
+    return password_hash.hash(plain)
 
 
-def verify_password(plain: str, hash: bytes) -> bool:
-    return context.verify(plain, hash)
+def verify_password(plain: str, hash: str) -> bool:
+    return password_hash.verify(plain, hash)
