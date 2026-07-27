@@ -1,3 +1,4 @@
+from uuid import UUID
 from typing import Optional
 from sqlalchemy import select
 from app.models import UserModel
@@ -18,3 +19,11 @@ class UserRepository:
         self.db.commit()
         self.db.refresh(user)
         return user
+
+    def get_by_id(self, id: UUID) -> Optional[UserModel]:
+        stmt = select(UserModel).where(UserModel.id == id)
+        return self.db.scalar(stmt)
+
+    def increment_token_version(self, user: UserModel) -> None:
+        user.token_version += 1
+        self.db.commit()
