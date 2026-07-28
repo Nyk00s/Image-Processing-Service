@@ -1,0 +1,4 @@
+
+
+class MaxUploadSizeExceededError(Exception):
+    pass

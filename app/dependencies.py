@@ -1,24 +1,69 @@
 import jwt
 import uuid
-from typing import Optional
+import boto3
+from app.config import Config
+from functools import lru_cache
 from app.database import get_db
 from app.models import UserModel
 from sqlalchemy.orm import Session
 from app.tokens import decode_token
-from app.services import UserService
+from app.storage import StorageClient
 from fastapi import HTTPException, Depends
-from app.repositories import UserRepository
+from botocore.exceptions import ClientError
 from fastapi.security import OAuth2PasswordBearer
+from app.services import UserService, PictureService
+from app.repositories import UserRepository, PictureRepository
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
+@lru_cache
+def get_settings() -> Config:
+    return Config()
 
 
 def get_user_repository(db: Session = Depends(get_db)) -> UserRepository:
     return UserRepository(db)
 
 
-def get_user_service(db: Session = Depends(get_db)) -> UserService:
-    return UserService(UserRepository(db))
+def get_user_service(user_repo: UserRepository = Depends(get_user_repository)) -> UserService:
+    return UserService(user_repo)
+
+
+def get_picture_repository(db: Session = Depends(get_db)) -> PictureRepository:
+    return PictureRepository(db)
+
+
+def build_s3_client(settings: Config = Depends(get_settings)):
+    return boto3.client(
+        "s3",
+        endpoint_url=settings.s3_endpoint_url,
+        aws_access_key_id=settings.s3_access_key,
+        aws_secret_access_key=settings.s3_secret_key.get_secret_value(),
+        region_name=settings.s3_region,
+    )
+
+
+def ensure_bucket(s3_client, bucket: str) -> None:
+    try:
+        s3_client.head_bucket(Bucket=bucket)
+    except ClientError:
+        s3_client.create_bucket(Bucket=bucket)
+
+
+def get_storage_client(settings: Config = Depends(get_settings)) -> StorageClient:
+    return StorageClient(
+        build_s3_client(settings),
+        settings.s3_bucket,
+        settings.presigned_url_ttl_seconds,
+    )
+
+
+def get_picture_service(
+        s3_client = Depends(get_storage_client),
+        picture_repo: PictureRepository = Depends(get_picture_repository),
+        settings: Config = Depends(get_settings)
+) -> PictureService:
+    return PictureService(s3_client, picture_repo, settings.max_upload_size_mb)
 
 
 def _resolve_token(
@@ -50,5 +95,5 @@ def get_current_user(
 def resolve_refresh_token(
     token: str,
     user_repo: UserRepository
-):
+) -> UserModel:
     return _resolve_token(token, "refresh", user_repo)
