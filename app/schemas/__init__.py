@@ -6,6 +6,7 @@ from .user_create import UserCreate
 from .picture_read import PictureRead
 from .tokens_schema import TokensSchema
 from .picture_create import PictureCreate
+from .picture_details import PictureDetails
 from .refresh_request import RefreshRequest
 
 __all__ = [
@@ -17,5 +18,6 @@ __all__ = [
     "UserRead", 
     "UserLogin",
     "TokensSchema",
-    "RefreshRequest"
+    "RefreshRequest",
+    "PictureDetails"
 ]

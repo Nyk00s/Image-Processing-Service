@@ -1,11 +1,12 @@
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, UUID4, ConfigDict
+from pydantic import BaseModel, ConfigDict, UUID4
 
 
-class PictureRead(BaseModel):
+class PictureDetails(BaseModel):
     id: UUID4
     user_id: UUID4
+    presigned_url: str
     name: str
     mime: str
     size: int
