@@ -5,7 +5,6 @@ from pydantic import BaseModel, UUID4, ConfigDict
 
 class PictureRead(BaseModel):
     id: UUID4
-    user_id: UUID4
     name: str
     mime: str
     size: int
