@@ -3,11 +3,10 @@ from PIL import Image
 from uuid import uuid4
 from fastapi import UploadFile
 from app.storage import StorageClient
-from sqlalchemy.exc import IntegrityError
 from app.repositories import PictureRepository
 from app.models import UserModel, PictureModel
-from app.exceptions import MaxUploadSizeExceededError, InvalidImageError
-
+from app.schemas import PictureList, PictureDetail
+from app.exceptions import MaxUploadSizeExceededError, InvalidImageError, PictureNotFoundError
 
 
 class PictureService:
@@ -25,10 +24,7 @@ class PictureService:
     async def upload(self, upload: UploadFile, user: UserModel) -> PictureModel:
         if upload.size is None or upload.size > self.max_upload_size_mb * 1024 * 1024:
             raise MaxUploadSizeExceededError()
-
         data = await upload.read()
-
-
         try:
             with Image.open(io.BytesIO(data)) as img:
                 img.verify()
@@ -39,10 +35,8 @@ class PictureService:
                 mime = Image.MIME.get(fmt)
         except Exception:
             raise InvalidImageError()
-
         if fmt not in {"JPEG", "PNG", "WEBP"}:
             raise InvalidImageError()
-        
         storage_key = f"users/{user.id}/originals/{uuid4()}.{ext}"
         self.storage.upload(storage_key, data, mime)
         picture = PictureModel(
@@ -60,4 +54,22 @@ class PictureService:
             self.storage.delete(storage_key)
             raise
         return picture
-        
+
+    def get_picture(self, id: int, user: UserModel) -> PictureDetail:
+        if not (picture := self.picture_repo.get_by_id_and_user(id, user.id)):
+            raise PictureNotFoundError()
+        return PictureDetail(
+            id=picture.id, name=picture.name, mime=picture.mime,
+            size=picture.size, width=picture.width, height=picture.height,
+            created_at=picture.created_at, url=self.storage.generate_presigned_url(picture.storage_key),
+        )
+
+    def list_pictures(self, user: UserModel, page: int, per_page: int) -> PictureList:
+        pictures = self.picture_repo.list_by_user(user.id, per_page, (page - 1) * per_page)
+        user_picture_count = self.picture_repo.count_by_user(user.id)
+        return PictureList(
+            items=pictures,
+            total=user_picture_count,
+            page=page,
+            per_page=per_page
+        )
