@@ -20,6 +20,24 @@ class PictureRepository:
         stmt = select(PictureModel).where(PictureModel.id == id)
         return self.db.scalar(stmt)
 
-    def list_by_user(self, user_id: UUID) -> Sequence[PictureModel]:
-        stmt = select(PictureModel).where(PictureModel.user_id == user_id).where(PictureModel.deleted_at.is_(None))
+    def get_by_id_and_user(self, id: UUID, user_id: UUID) -> Optional[PictureModel]:
+        stmt = select(PictureModel).where(
+            PictureModel.id == id, 
+            PictureModel.user_id == user_id,
+            PictureModel.deleted_at.is_(None)
+        )
+        return self.db.scalar(stmt)
+
+    def list_by_user(self, user_id: UUID, limit: int, offset: int) -> Sequence[PictureModel]:
+        stmt = select(PictureModel).where(
+            PictureModel.deleted_at.is_(None),
+            PictureModel.user_id == user_id
+        ).limit(limit).offset(offset)
         return self.db.scalars(stmt).all()
+
+    def count_by_user(self, user_id: UUID) -> int:
+        stmt = select(PictureModel).where(
+            PictureModel.user_id == user_id,
+            PictureModel.deleted_at.is_(None)
+        )
+        return len(self.db.scalars(stmt).all())
