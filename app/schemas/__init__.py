@@ -3,6 +3,7 @@ from .task_read import TaskRead
 from .user_login import UserLogin
 from .task_create import TaskCreate
 from .user_create import UserCreate
+from .picture_list import PictureList
 from .picture_read import PictureRead
 from .tokens_schema import TokensSchema
 from .picture_create import PictureCreate
@@ -19,5 +20,6 @@ __all__ = [
     "UserLogin",
     "TokensSchema",
     "RefreshRequest",
-    "PictureDetails"
+    "PictureDetails",
+    "PictureList"
 ]
