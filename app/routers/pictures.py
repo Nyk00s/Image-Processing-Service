@@ -1,9 +1,10 @@
+from uuid import UUID
 from app.models import UserModel
-from app.schemas import PictureRead
 from app.services import PictureService
-from fastapi import APIRouter, Depends, UploadFile, HTTPException
-from app.exceptions import InvalidImageError, MaxUploadSizeExceededError
+from app.schemas import PictureRead, PictureDetail, PictureList
 from app.dependencies import get_current_user, get_picture_service
+from fastapi import APIRouter, Depends, UploadFile, HTTPException, Query
+from app.exceptions import InvalidImageError, MaxUploadSizeExceededError, PictureNotFoundError
 
 router = APIRouter(prefix="/pictures", tags=["pictures"])
 
@@ -21,3 +22,25 @@ async def upload_picture(
     except InvalidImageError:
         raise HTTPException(400, "Invalid image")
     return picture
+
+
+@router.get("/{id}", response_model=PictureDetail, status_code=200)
+def handle_get_picture(
+    id: UUID, 
+    user: UserModel = Depends(get_current_user),
+    picture_service: PictureService = Depends(get_picture_service)
+):
+    try:
+        return picture_service.get_picture(id, user)
+    except PictureNotFoundError:
+        raise HTTPException(404, "Picture not found")
+
+
+@router.get("", response_model=PictureList, status_code=200)
+def handle_list_pictures(
+    page: int = Query(default=1, ge=1),
+    per_page: int = Query(default=20, ge=1, le=100),
+    user: UserModel = Depends(get_current_user),
+    picture_service: PictureService = Depends(get_picture_service)
+):
+    return picture_service.list_pictures(user, page, per_page)
