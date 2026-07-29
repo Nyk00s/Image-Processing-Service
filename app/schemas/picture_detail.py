@@ -3,9 +3,8 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, UUID4
 
 
-class PictureDetails(BaseModel):
+class PictureDetail(BaseModel):
     id: UUID4
-    user_id: UUID4
     presigned_url: str
     name: str
     mime: str

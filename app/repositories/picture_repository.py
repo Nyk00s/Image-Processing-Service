@@ -1,7 +1,7 @@
 from uuid import UUID
 from sqlalchemy.orm import Session
-from sqlalchemy import select
-from app.models import PictureModel, UserModel
+from sqlalchemy import select, func
+from app.models import PictureModel
 from typing import Sequence, Optional
 
 
@@ -36,8 +36,8 @@ class PictureRepository:
         return self.db.scalars(stmt).all()
 
     def count_by_user(self, user_id: UUID) -> int:
-        stmt = select(PictureModel).where(
+        stmt = select(func.count()).select_from(PictureModel).where(
             PictureModel.user_id == user_id,
             PictureModel.deleted_at.is_(None)
         )
-        return len(self.db.scalars(stmt).all())
+        return self.db.scalar(stmt)

@@ -12,6 +12,5 @@ class PictureRead(BaseModel):
     width: int
     height: int
     created_at: datetime
-    deleted_at: Optional[datetime]
 
     model_config = ConfigDict(from_attributes=True)
