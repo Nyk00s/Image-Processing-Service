@@ -1,6 +1,6 @@
-from typing import Dict, Any
 from pydantic import BaseModel
+from app.schemas.operations import Operation
 
 
 class TaskCreate(BaseModel):
-    operations: Dict[str, Any]
+    operations: list[Operation]
