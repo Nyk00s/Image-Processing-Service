@@ -1,3 +1,4 @@
+from .operations import Operation
 from .auth import RefreshRequest, TokensSchema
 from .user import UserRead, UserLogin, UserCreate
 from .task import TaskRead, TaskRead, TaskAccepted, TaskCreate
@@ -15,5 +16,6 @@ __all__ = [
     "RefreshRequest",
     "PictureDetail",
     "PictureList",
-    "TaskAccepted"
+    "TaskAccepted",
+    "Operation"
 ]

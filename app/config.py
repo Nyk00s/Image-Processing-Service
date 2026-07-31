@@ -6,7 +6,8 @@ class Config(BaseSettings):
 
     # Database
     database_url: str
-    redis_url: str
+    redis_cache_url: str
+    redis_broker_url: str
 
     # MinIO
     s3_endpoint_url: str

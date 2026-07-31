@@ -11,7 +11,7 @@ from app.storage import StorageClient
 from fastapi import HTTPException, Depends
 from botocore.exceptions import ClientError
 from fastapi.security import OAuth2PasswordBearer
-from app.services import UserService, PictureService
+from app.services import UserService, PictureService, TaskService
 from app.repositories import UserRepository, PictureRepository, TaskRepository
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -35,6 +35,13 @@ def get_user_service(user_repo: UserRepository = Depends(get_user_repository)) -
 
 def get_picture_repository(db: Session = Depends(get_db)) -> PictureRepository:
     return PictureRepository(db)
+
+
+def get_task_service(
+        task_repo: TaskRepository = Depends(get_task_repository), 
+        picture_repo: PictureRepository = Depends(get_picture_repository)
+) -> TaskService:
+    return TaskService(task_repo, picture_repo)
 
 
 def build_s3_client(settings: Config = Depends(get_settings)):
