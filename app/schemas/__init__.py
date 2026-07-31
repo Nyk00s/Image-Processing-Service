@@ -1,14 +1,7 @@
-from .user_read import UserRead
-from .task_read import TaskRead
-from .user_login import UserLogin
-from .task_create import TaskCreate
-from .user_create import UserCreate
-from .picture_list import PictureList
-from .picture_read import PictureRead
-from .tokens_schema import TokensSchema
-from .picture_create import PictureCreate
-from .picture_detail import PictureDetail
-from .refresh_request import RefreshRequest
+from .auth import RefreshRequest, TokensSchema
+from .user import UserRead, UserLogin, UserCreate
+from .task import TaskRead, TaskRead, TaskAccepted, TaskCreate
+from .picture import PictureList, PictureRead, PictureCreate, PictureDetail
 
 __all__ = [
     "PictureCreate", 
@@ -21,5 +14,6 @@ __all__ = [
     "TokensSchema",
     "RefreshRequest",
     "PictureDetail",
-    "PictureList"
+    "PictureList",
+    "TaskAccepted"
 ]

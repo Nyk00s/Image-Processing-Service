@@ -12,6 +12,6 @@ class TaskRead(BaseModel):
     error_message: Optional[str]
     created_at: datetime
     finished_at: Optional[datetime]
-    result_storage_key: Optional[str]
+    url: Optional[str]
 
     model_config = ConfigDict(from_attributes=True)
