@@ -12,13 +12,17 @@ from fastapi import HTTPException, Depends
 from botocore.exceptions import ClientError
 from fastapi.security import OAuth2PasswordBearer
 from app.services import UserService, PictureService
-from app.repositories import UserRepository, PictureRepository
+from app.repositories import UserRepository, PictureRepository, TaskRepository
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 @lru_cache
 def get_settings() -> Config:
     return Config()
+
+
+def get_task_repository(db: Session = Depends(get_db)):
+    return TaskRepository(db)
 
 
 def get_user_repository(db: Session = Depends(get_db)) -> UserRepository:
