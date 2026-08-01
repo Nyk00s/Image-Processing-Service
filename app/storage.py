@@ -1,3 +1,5 @@
+import boto3
+from app.config import Config
 
 
 class StorageClient:
@@ -19,3 +21,28 @@ class StorageClient:
             Params={"Bucket": self.bucket, "Key": key},
             ExpiresIn=self.presigned_url_ttl_seconds
         )
+
+    def download(self, key: str) -> bytes:
+        response = self.s3_client.get_object(
+            Bucket=self.bucket,
+            Key=key
+        )
+        return response["Body"].read()
+
+
+def build_s3_client(settings: Config):
+    return boto3.client(
+        "s3",
+        endpoint_url=settings.s3_endpoint_url,
+        aws_access_key_id=settings.s3_access_key,
+        aws_secret_access_key=settings.s3_secret_key.get_secret_value(),
+        region_name=settings.s3_region,
+    )
+
+
+def get_storage_client(settings: Config) -> StorageClient:
+    return StorageClient(
+        build_s3_client(settings),
+        settings.s3_bucket,
+        settings.presigned_url_ttl_seconds,
+    )

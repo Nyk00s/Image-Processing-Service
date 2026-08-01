@@ -1,13 +1,12 @@
 import jwt
 import uuid
-import boto3
 from app.config import Config
 from functools import lru_cache
 from app.database import get_db
 from app.models import UserModel
 from sqlalchemy.orm import Session
 from app.tokens import decode_token
-from app.storage import StorageClient
+from app.storage import get_storage_client
 from fastapi import HTTPException, Depends
 from botocore.exceptions import ClientError
 from fastapi.security import OAuth2PasswordBearer
@@ -44,16 +43,6 @@ def get_task_service(
     return TaskService(task_repo, picture_repo)
 
 
-def build_s3_client(settings: Config = Depends(get_settings)):
-    return boto3.client(
-        "s3",
-        endpoint_url=settings.s3_endpoint_url,
-        aws_access_key_id=settings.s3_access_key,
-        aws_secret_access_key=settings.s3_secret_key.get_secret_value(),
-        region_name=settings.s3_region,
-    )
-
-
 def ensure_bucket(s3_client, bucket: str) -> None:
     try:
         s3_client.head_bucket(Bucket=bucket)
@@ -61,20 +50,11 @@ def ensure_bucket(s3_client, bucket: str) -> None:
         s3_client.create_bucket(Bucket=bucket)
 
 
-def get_storage_client(settings: Config = Depends(get_settings)) -> StorageClient:
-    return StorageClient(
-        build_s3_client(settings),
-        settings.s3_bucket,
-        settings.presigned_url_ttl_seconds,
-    )
-
-
 def get_picture_service(
-        s3_client = Depends(get_storage_client),
         picture_repo: PictureRepository = Depends(get_picture_repository),
         settings: Config = Depends(get_settings)
 ) -> PictureService:
-    return PictureService(s3_client, picture_repo, settings.max_upload_size_mb)
+    return PictureService(get_storage_client(settings), picture_repo, settings.max_upload_size_mb)
 
 
 def _resolve_token(

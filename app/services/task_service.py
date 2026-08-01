@@ -1,5 +1,5 @@
 from uuid import UUID
-from app.tasks import transform_image
+from app.worker import transform_image
 from app.models import TaskModel, TaskStatus
 from app.schemas import TaskAccepted, Operation
 from app.repositories import TaskRepository, PictureRepository
@@ -32,5 +32,3 @@ class TaskService:
             task_id=task.id,
             status=task.status
         )
-
-    

@@ -56,6 +56,6 @@ def handle_task_creation(
     try:
         task = task_service.create_transformation(id, user.id, data.operations)
     except PictureNotFoundError:
-        raise HTTPException(404, "Image id does not exists")
+        raise HTTPException(404, "Image id does not exist")
     return task
     
