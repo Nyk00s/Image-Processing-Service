@@ -1,6 +1,6 @@
 import io
 from PIL import Image
-from uuid import uuid4
+from uuid import uuid4, UUID
 from fastapi import UploadFile
 from app.storage import StorageClient
 from app.repositories import PictureRepository
@@ -55,7 +55,7 @@ class PictureService:
             raise
         return picture
 
-    def get_picture(self, id: int, user: UserModel) -> PictureDetail:
+    def get_picture(self, id: UUID, user: UserModel) -> PictureDetail:
         if not (picture := self.picture_repo.get_by_id_and_user(id, user.id)):
             raise PictureNotFoundError()
         return PictureDetail(

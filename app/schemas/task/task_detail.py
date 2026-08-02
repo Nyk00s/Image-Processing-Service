@@ -4,7 +4,7 @@ from app.models import TaskStatus
 from pydantic import BaseModel, UUID4, ConfigDict
 
 
-class TaskRead(BaseModel):
+class TaskDetail(BaseModel):
     id: UUID4
     picture_id: UUID4
     operations: list[dict]
@@ -12,5 +12,6 @@ class TaskRead(BaseModel):
     error_message: Optional[str]
     created_at: datetime
     finished_at: Optional[datetime]
+    url: Optional[str]
 
     model_config = ConfigDict(from_attributes=True)

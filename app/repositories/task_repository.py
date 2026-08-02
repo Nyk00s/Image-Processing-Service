@@ -1,7 +1,7 @@
 from uuid import UUID
 from app.models import TaskModel, PictureModel
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, func
 from typing import Optional, Sequence
 
 
@@ -32,10 +32,21 @@ class TaskRepository:
             .where(PictureModel.user_id == user_id, TaskModel.id == id))
         return self.db.scalar(stmt)
 
-    def list_by_user(self, user_id: UUID) -> Sequence[TaskModel]:
+    def list_by_user(self, user_id: UUID, limit: int, offset: int) -> Sequence[TaskModel]:
         stmt = (
             select(TaskModel)
             .join(PictureModel, TaskModel.picture_id == PictureModel.id)
             .where(PictureModel.user_id == user_id)
+            .limit(limit)
+            .offset(offset)
         )
         return self.db.scalars(stmt).all()
+
+    def count_by_user(self, user_id: UUID) -> int:
+        stmt = (
+            select(func.count())
+            .select_from(TaskModel)
+            .join(PictureModel, TaskModel.picture_id == PictureModel.id)
+            .where(PictureModel.user_id == user_id)
+        )
+        return self.db.scalar(stmt)

@@ -1,16 +1,18 @@
 from uuid import UUID
+from app.storage import StorageClient
 from app.worker import transform_image
-from app.models import TaskModel, TaskStatus
-from app.schemas import TaskAccepted, Operation
+from app.models import TaskModel, TaskStatus, UserModel
 from app.repositories import TaskRepository, PictureRepository
-from app.exceptions import PictureNotFoundError
+from app.exceptions import PictureNotFoundError, TaskNotFoundError
+from app.schemas import TaskAccepted, Operation, TaskDetail, TaskList
 
 
 class TaskService:
 
-    def __init__(self, task_repo: TaskRepository, picture_repo: PictureRepository):
+    def __init__(self, task_repo: TaskRepository, picture_repo: PictureRepository, storage: StorageClient):
         self.task_repo = task_repo
         self.picture_repo = picture_repo
+        self.storage = storage
 
     def create_transformation(
             self, 
@@ -31,4 +33,25 @@ class TaskService:
         return TaskAccepted(
             task_id=task.id,
             status=task.status
+        )
+
+    def get_task(self, id: UUID, user: UserModel) -> TaskDetail:
+        if not (task := self.task_repo.get_by_id_and_user(id, user.id)):
+            raise TaskNotFoundError()
+        key = task.result_storage_key
+        url = self.storage.generate_presigned_url(key) if key else None
+        return TaskDetail(
+            id=task.id, picture_id=task.picture_id, operations=task.operations,
+            status=task.status, error_message=task.error_message, created_at=task.created_at,
+            finished_at=task.finished_at, url=url
+        )
+
+    def list_tasks(self, user: UserModel, page: int, per_page: int) -> TaskList:
+        tasks = self.task_repo.list_by_user(user.id, per_page, (page - 1) * per_page)
+        count_of_tasks = self.task_repo.count_by_user(user.id)
+        return TaskList(
+            tasks=tasks,
+            per_page=per_page,
+            page=page,
+            total=count_of_tasks
         )

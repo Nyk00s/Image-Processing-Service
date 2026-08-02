@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 from app.tokens import decode_token
 from app.storage import get_storage_client
 from fastapi import HTTPException, Depends
-from botocore.exceptions import ClientError
 from fastapi.security import OAuth2PasswordBearer
 from app.services import UserService, PictureService, TaskService
 from app.repositories import UserRepository, PictureRepository, TaskRepository
@@ -38,16 +37,10 @@ def get_picture_repository(db: Session = Depends(get_db)) -> PictureRepository:
 
 def get_task_service(
         task_repo: TaskRepository = Depends(get_task_repository), 
-        picture_repo: PictureRepository = Depends(get_picture_repository)
+        picture_repo: PictureRepository = Depends(get_picture_repository),
+        settings: Config = Depends(get_settings)
 ) -> TaskService:
-    return TaskService(task_repo, picture_repo)
-
-
-def ensure_bucket(s3_client, bucket: str) -> None:
-    try:
-        s3_client.head_bucket(Bucket=bucket)
-    except ClientError:
-        s3_client.create_bucket(Bucket=bucket)
+    return TaskService(task_repo, picture_repo, get_storage_client(settings))
 
 
 def get_picture_service(

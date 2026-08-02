@@ -1,5 +1,6 @@
 import boto3
 from app.config import Config
+from botocore.exceptions import ClientError
 
 
 class StorageClient:
@@ -46,3 +47,10 @@ def get_storage_client(settings: Config) -> StorageClient:
         settings.s3_bucket,
         settings.presigned_url_ttl_seconds,
     )
+
+
+def ensure_bucket(s3_client, bucket: str) -> None:
+    try:
+        s3_client.head_bucket(Bucket=bucket)
+    except ClientError:
+        s3_client.create_bucket(Bucket=bucket)
