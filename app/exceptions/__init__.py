@@ -1,3 +1,4 @@
+from .base import DomainError
 from .invalid_image_error import InvalidImageError
 from .task_not_found_error import TaskNotFoundError
 from .picture_not_found_error import PictureNotFoundError
@@ -11,5 +12,6 @@ __all__ = [
     'MaxUploadSizeExceededError',
     'InvalidImageError',
     'PictureNotFoundError',
-    'TaskNotFoundError'
+    'TaskNotFoundError',
+    'DomainError'
 ]

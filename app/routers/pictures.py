@@ -1,10 +1,9 @@
 from uuid import UUID
 from app.models import UserModel
 from app.services import PictureService, TaskService
-from fastapi import APIRouter, Depends, UploadFile, HTTPException, Query
+from fastapi import APIRouter, Depends, UploadFile, Query
 from app.dependencies import get_current_user, get_picture_service, get_task_service
 from app.schemas import PictureRead, PictureDetail, PictureList, TaskCreate, TaskAccepted
-from app.exceptions import InvalidImageError, MaxUploadSizeExceededError, PictureNotFoundError
 
 router = APIRouter(prefix="/pictures", tags=["pictures"])
 
@@ -15,12 +14,7 @@ async def upload_picture(
     picture_service: PictureService = Depends(get_picture_service),
     current_user: UserModel = Depends(get_current_user),
 ):
-    try:
-        picture = await picture_service.upload(file, current_user)
-    except MaxUploadSizeExceededError:
-        raise HTTPException(413, "Image exceeds allowed size")
-    except InvalidImageError:
-        raise HTTPException(400, "Invalid image")
+    picture = await picture_service.upload(file, current_user)
     return picture
 
 
@@ -30,10 +24,7 @@ def handle_get_picture(
     user: UserModel = Depends(get_current_user),
     picture_service: PictureService = Depends(get_picture_service)
 ):
-    try:
-        return picture_service.get_picture(id, user)
-    except PictureNotFoundError:
-        raise HTTPException(404, "Picture not found")
+    return picture_service.get_picture(id, user)
 
 
 @router.get("", response_model=PictureList, status_code=200)
@@ -53,9 +44,4 @@ def handle_task_creation(
     user: UserModel = Depends(get_current_user),
     task_service: TaskService = Depends(get_task_service)
 ):
-    try:
-        task = task_service.create_transformation(id, user.id, data.operations)
-    except PictureNotFoundError:
-        raise HTTPException(404, "Image id does not exist")
-    return task
-    
+    return task_service.create_transformation(id, user.id, data.operations)

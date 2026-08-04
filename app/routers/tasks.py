@@ -2,8 +2,7 @@ from uuid import UUID
 from app.models import UserModel
 from app.services import TaskService
 from app.schemas import TaskList, TaskDetail
-from app.exceptions import TaskNotFoundError
-from fastapi import APIRouter, Query, Depends, HTTPException
+from fastapi import APIRouter, Query, Depends
 from app.dependencies import get_current_user, get_task_service
 
 router = APIRouter(prefix='/tasks', tags=['tasks'])
@@ -25,7 +24,4 @@ def handle_get_single_task(
         user: UserModel = Depends(get_current_user),
         task_service: TaskService = Depends(get_task_service)
 ):
-    try:
-        return task_service.get_task(id, user)
-    except TaskNotFoundError:
-        raise HTTPException(404, "Task not found")
+    return task_service.get_task(id, user)
