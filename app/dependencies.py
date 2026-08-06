@@ -1,6 +1,7 @@
 import jwt
 import uuid
 from redis import Redis
+from fastapi import Depends
 from app.config import Config
 from functools import lru_cache
 from app.database import get_db
@@ -10,7 +11,6 @@ from sqlalchemy.orm import Session
 from app.tokens import decode_token
 from app.rate_limiter import RateLimiter
 from app.storage import get_storage_client
-from fastapi import HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from app.services import UserService, PictureService, TaskService
 from app.exceptions import RateLimitExceededError, InvalidTokenError
@@ -52,7 +52,12 @@ def get_picture_service(
         picture_repo: PictureRepository = Depends(get_picture_repository),
         settings: Config = Depends(get_settings)
 ) -> PictureService:
-    return PictureService(get_storage_client(settings), picture_repo, settings.max_upload_size_mb)
+    return PictureService(
+        get_storage_client(settings),
+        get_storage_client(settings, public=True), 
+        picture_repo, 
+        settings.max_upload_size_mb
+    )
 
 
 def _resolve_token(

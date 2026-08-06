@@ -31,19 +31,19 @@ class StorageClient:
         return response["Body"].read()
 
 
-def build_s3_client(settings: Config):
+def build_s3_client(settings: Config, public: bool):
     return boto3.client(
         "s3",
-        endpoint_url=settings.s3_endpoint_url,
+        endpoint_url=settings.s3_public_url if public else settings.s3_endpoint_url,
         aws_access_key_id=settings.s3_access_key,
         aws_secret_access_key=settings.s3_secret_key.get_secret_value(),
         region_name=settings.s3_region,
     )
 
 
-def get_storage_client(settings: Config) -> StorageClient:
+def get_storage_client(settings: Config, public: bool = False) -> StorageClient:
     return StorageClient(
-        build_s3_client(settings),
+        build_s3_client(settings, public=public),
         settings.s3_bucket,
         settings.presigned_url_ttl_seconds,
     )

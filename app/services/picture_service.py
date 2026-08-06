@@ -14,10 +14,12 @@ class PictureService:
     def __init__(
             self, 
             storage: StorageClient, 
+            public_storage: StorageClient,
             picture_repo: PictureRepository,
             max_upload_size_mb: int
         ):
         self.storage = storage
+        self.public_storage = public_storage
         self.picture_repo = picture_repo
         self.max_upload_size_mb = max_upload_size_mb
 
@@ -61,7 +63,7 @@ class PictureService:
         return PictureDetail(
             id=picture.id, name=picture.name, mime=picture.mime,
             size=picture.size, width=picture.width, height=picture.height,
-            created_at=picture.created_at, url=self.storage.generate_presigned_url(picture.storage_key),
+            created_at=picture.created_at, url=self.public_storage.generate_presigned_url(picture.storage_key),
         )
 
     def list_pictures(self, user: UserModel, page: int, per_page: int) -> PictureList:

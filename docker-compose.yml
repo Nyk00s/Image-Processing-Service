@@ -4,10 +4,11 @@ services:
 
   api:
     build: .
+    env_file: .env
     container_name: $IMAGE_API_CONTAINER_NAME
     ports:
       - "${IMAGE_API_PORT}:${IMAGE_API_PORT}"
-    command: uvicorn main:app --host $IMAGE_API_HOST --port $IMAGE_API_PORT
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${IMAGE_API_PORT}"
     depends_on:
       db:
         condition: service_healthy
@@ -23,8 +24,8 @@ services:
       POSTGRES_USER: $POSTGRES_USER
       POSTGRES_PASSWORD: $POSTGRES_PASSWORD
       POSTGRES_DB: $POSTGRES_DB
-    ports:
-      - "${DB_PORT}:${DB_PORT}"
+    expose:
+      - "${DB_PORT}"
     volumes: 
       - "postgres_data:/var/lib/postgresql/18/docker"
     healthcheck:
@@ -37,8 +38,8 @@ services:
   cache:
     image: redis:7
     container_name: $CACHE_CONTAINER_NAME
-    ports:
-      - "${CACHE_PORT}:${CACHE_PORT}"
+    expose:
+      - "${CACHE_PORT}"
     volumes:
       - "redis_data:/data"
     healthcheck:
@@ -67,7 +68,8 @@ services:
 
   worker:
     build: .
-    command: celery -A app.worker.celery_app:celery_app --loglevel=info
+    env_file: .env
+    command: celery -A app.worker.celery_app:celery_app worker --loglevel=info
     depends_on:
       db:
         condition: service_healthy

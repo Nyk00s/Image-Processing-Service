@@ -11,6 +11,7 @@ class Config(BaseSettings):
 
     # MinIO
     s3_endpoint_url: str
+    s3_public_url: str
     s3_access_key: str
     s3_secret_key: SecretStr
     s3_bucket: str
