@@ -25,6 +25,8 @@ class Config(BaseSettings):
     # Rate limit
     upload_rate_limit: int = 10
     rate_limit_window_seconds: int = 3600
+    cache_port: int
+    cache_host: str = 'localhost'
 
     # Upload settings
     max_upload_size_mb: int

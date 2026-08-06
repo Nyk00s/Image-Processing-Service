@@ -2,13 +2,13 @@ from uuid import UUID
 from app.models import UserModel
 from app.services import PictureService, TaskService
 from fastapi import APIRouter, Depends, UploadFile, Query
-from app.dependencies import get_current_user, get_picture_service, get_task_service
+from app.dependencies import get_current_user, get_picture_service, get_task_service, check_upload_rate_limit
 from app.schemas import PictureRead, PictureDetail, PictureList, TaskCreate, TaskAccepted
 
 router = APIRouter(prefix="/pictures", tags=["pictures"])
 
 
-@router.post("", response_model=PictureRead, status_code=201)
+@router.post("", response_model=PictureRead, status_code=201, dependencies=[Depends(check_upload_rate_limit)])
 async def upload_picture( 
     file: UploadFile,
     picture_service: PictureService = Depends(get_picture_service),

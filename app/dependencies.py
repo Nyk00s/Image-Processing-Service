@@ -1,18 +1,23 @@
 import jwt
 import uuid
+from redis import Redis
 from app.config import Config
 from functools import lru_cache
 from app.database import get_db
 from app.models import UserModel
+from app.cache import CacheClient
 from sqlalchemy.orm import Session
 from app.tokens import decode_token
+from app.rate_limiter import RateLimiter
 from app.storage import get_storage_client
 from fastapi import HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from app.services import UserService, PictureService, TaskService
+from app.exceptions import RateLimitExceededError, InvalidTokenError
 from app.repositories import UserRepository, PictureRepository, TaskRepository
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
 
 @lru_cache
 def get_settings() -> Config:
@@ -58,14 +63,14 @@ def _resolve_token(
     try:
         payload = decode_token(token)
     except jwt.InvalidTokenError:
-        raise HTTPException(401, "Invalid token")
+        raise InvalidTokenError()
     if payload["type"] != expected_type:
-        raise HTTPException(401, "Invalid token")
+        raise InvalidTokenError()
     user = user_repo.get_by_id(uuid.UUID(payload["sub"]))
     if user is None:
-        raise HTTPException(401, "Invalid token")
+        raise InvalidTokenError()
     if user.token_version != payload["token_version"]:
-        raise HTTPException(401, "Invalid token")
+        raise InvalidTokenError()
     return user
 
 
@@ -81,3 +86,27 @@ def resolve_refresh_token(
     user_repo: UserRepository
 ) -> UserModel:
     return _resolve_token(token, "refresh", user_repo)
+
+
+def get_cache_client(settings: Config = Depends(get_settings)) -> CacheClient:
+    return CacheClient(Redis(settings.cache_host, settings.cache_port, decode_responses=True))
+
+
+def get_rate_limiter(
+    cache_client: CacheClient = Depends(get_cache_client),
+    settings: Config = Depends(get_settings)
+) -> RateLimiter:
+    return RateLimiter(
+        cache_client, 
+        limit=settings.upload_rate_limit, 
+        window_seconds=settings.rate_limit_window_seconds
+    )
+
+
+def check_upload_rate_limit(
+    current_user: UserModel = Depends(get_current_user),
+    rate_limiter: RateLimiter = Depends(get_rate_limiter)
+) -> None:
+    key = f'ratelimit:upload:{current_user.id}'
+    if not rate_limiter.check(key):
+        raise RateLimitExceededError()
