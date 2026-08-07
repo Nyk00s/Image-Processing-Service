@@ -9,7 +9,7 @@ from app.exception_handlers import register_exception_handlers
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
-    s3 = build_s3_client(settings)
+    s3 = build_s3_client(settings, public=False)
     ensure_bucket(s3, settings.s3_bucket)
     yield
 

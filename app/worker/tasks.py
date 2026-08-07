@@ -8,9 +8,9 @@ from pydantic import TypeAdapter
 from app.schemas import Operation
 from .celery_app import celery_app
 from app.database import SessionLocal
-from app.transformations import DISPATCH
 from app.storage import get_storage_client
 from app.models import TaskStatus, TaskModel
+from app.transformations import DISPATCH, process_image
 from app.repositories import TaskRepository, PictureRepository
 
 operations_adapter = TypeAdapter(list[Operation])
@@ -24,21 +24,6 @@ def _fail(task_repo: TaskRepository, task: TaskModel, msg: str) -> None:
     task.status = TaskStatus.FAILED
     task_repo.update(task)
     logging.error(msg)
-
-
-def process_image(data: bytes, operations: list[Operation]) -> tuple[bytes, str]:
-    img = Image.open(io.BytesIO(data))
-    output_format = img.format
-    for op in operations:
-        if op.type == "format":
-            output_format = op.target.upper()
-        else:
-            img = DISPATCH[op.type](img, op)
-    if output_format in ("JPEG", "JPG") and img.mode != "RGB":
-        img = img.convert("RGB")
-    out = io.BytesIO()
-    img.save(out, format=output_format)
-    return out.getvalue(), output_format
 
 
 @celery_app.task

@@ -1,6 +1,8 @@
 import os
+import io
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
+from app.schemas import Operation
 from app.schemas.operations import ResizeOperation, GrayscaleOperation, CropOperation, RotateOperation, \
       FlipOperation, SepiaOperation, WatermarkOperation
 
@@ -89,3 +91,18 @@ DISPATCH = {
     "sepia": apply_sepia,
     "watermark": apply_watermark
 }
+
+
+def process_image(data: bytes, operations: list[Operation]) -> tuple[bytes, str]:
+    img = Image.open(io.BytesIO(data))
+    output_format = img.format
+    for op in operations:
+        if op.type == "format":
+            output_format = op.target.upper()
+        else:
+            img = DISPATCH[op.type](img, op)
+    if output_format in ("JPEG", "JPG") and img.mode != "RGB":
+        img = img.convert("RGB")
+    out = io.BytesIO()
+    img.save(out, format=output_format)
+    return out.getvalue(), output_format

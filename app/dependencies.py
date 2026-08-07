@@ -45,7 +45,7 @@ def get_task_service(
         picture_repo: PictureRepository = Depends(get_picture_repository),
         settings: Config = Depends(get_settings)
 ) -> TaskService:
-    return TaskService(task_repo, picture_repo, get_storage_client(settings))
+    return TaskService(task_repo, picture_repo, get_storage_client(settings, public=True))
 
 
 def get_picture_service(
