@@ -76,4 +76,9 @@ class FakeStorageClient:
 
     def delete(self, key):
         self.objects.pop(key, None)
+
+
+class FakeCacheClient:
+    def record_and_count(self, key, window_records):
+        return 11
                 
