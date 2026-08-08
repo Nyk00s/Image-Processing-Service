@@ -5,7 +5,6 @@ from datetime import datetime
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 
-
 class UserModel(Base):
     __tablename__ = "users"
 
