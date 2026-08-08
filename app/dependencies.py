@@ -10,8 +10,8 @@ from app.cache import CacheClient
 from sqlalchemy.orm import Session
 from app.tokens import decode_token
 from app.rate_limiter import RateLimiter
-from app.storage import get_storage_client
 from fastapi.security import OAuth2PasswordBearer
+from app.storage import get_storage_client, StorageClient
 from app.services import UserService, PictureService, TaskService
 from app.exceptions import RateLimitExceededError, InvalidTokenError
 from app.repositories import UserRepository, PictureRepository, TaskRepository
@@ -22,6 +22,15 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 @lru_cache
 def get_settings() -> Config:
     return Config()
+
+
+@lru_cache
+def get_internal_storage_client() -> StorageClient:
+    return get_storage_client(get_settings(), public=False)
+
+@lru_cache
+def get_public_storage_client() -> StorageClient:
+    return get_storage_client(get_settings(), public=True)
 
 
 def get_task_repository(db: Session = Depends(get_db)):
@@ -45,7 +54,7 @@ def get_task_service(
         picture_repo: PictureRepository = Depends(get_picture_repository),
         settings: Config = Depends(get_settings)
 ) -> TaskService:
-    return TaskService(task_repo, picture_repo, get_storage_client(settings, public=True))
+    return TaskService(task_repo, picture_repo, get_public_storage_client())
 
 
 def get_picture_service(
@@ -53,8 +62,8 @@ def get_picture_service(
         settings: Config = Depends(get_settings)
 ) -> PictureService:
     return PictureService(
-        get_storage_client(settings),
-        get_storage_client(settings, public=True), 
+        get_internal_storage_client(),
+        get_public_storage_client(), 
         picture_repo, 
         settings.max_upload_size_mb
     )

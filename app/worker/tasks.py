@@ -52,7 +52,7 @@ def transform_image(task_id: str) -> None:
             data, fmt = process_image(picture_bytes, operations)
             
             result_key = f"users/{picture.user_id}/derived/{task.picture_id}/{task.id}.{fmt.lower()}"
-            storage.upload(result_key, data, Image.MIME.get(fmt))
+            storage.upload(result_key, data, Image.MIME.get(fmt, "application/octet-stream"))
             
             task.status = TaskStatus.COMPLETED
             task.result_storage_key = result_key
